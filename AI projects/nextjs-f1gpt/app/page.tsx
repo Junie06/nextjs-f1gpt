@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { useChat } from "@ai-sdk/react"
 import { type UIMessage } from "ai"
+import Image from "next/image"
+import f1GPTLogo from "./assets/f1gpt logo.png"
 
 
 const Home = () => {
@@ -19,17 +21,20 @@ const Home = () => {
             await sendMessage({ text: input});
             setInput("");
         }
+    }
 
     const noMessages = true
 
     return (
-        <main className="flex h-screen flex-col bg-background">
+        <main>
+            <Image src={f1GPTLogo} width="250" alt="F1GPT"/>
             <section className={noMessages ? "" : "populated"} >
-            {noMessages ? (
+                {noMessages ? (
                 <>
                 <p>
                     Hey! Welcome to F1GPT! 
-                    I'm here to talk about all things Formula One.
+                    I'm here to talk about all things Formula One. It will come back
+                    with the most up-to-date answers, we hope you enjoy
                 </p>
                 <br/>
                 {/*<PromptSuggestionsRow/>*/}
@@ -40,15 +45,17 @@ const Home = () => {
                    {/*map messages onto text bubbles*/}
                    {/*<LoadingBubble />*/}
                 </>
-            )}
+                 )}
+            </section>
             <form onSubmit={handleSubmit}>
                 <input className="question-box" 
                 onChange={handleInputChange} 
                 value={input} placeholder="Ask me something"/>
                 <input type="submit"/>
             </form>
-            </section>
-            </main>
+        </main>
+            
     )
 }
-}
+
+export default Home

@@ -1,27 +1,17 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
-import { Suspense } from "react"
-import "./globals.css"
 
-export const metadata: Metadata = {
+import "./global.css"
+
+export const metadata = {
   title: "F1GPT",
-  description: "The AI-powered Formula 1 assistant.",
+  description: "The AI-powered Formula 1 assistant for all your F!1 questions.",
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+const RootLayout = ({ children }) => {
   return (
-    <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-        <Analytics />
-      </body>
+    <html lang = "en">
+      <body>{children}</body>
     </html>
   )
 }
+
+export default RootLayout;
