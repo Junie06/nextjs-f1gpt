@@ -26,7 +26,14 @@ const Home = () => {
         }
     }
 
-    const noMessages = false
+    const noMessages = !messages || messages.length === 0;
+
+    const handlePrompt = async (promptText) => {
+        const msg = {
+            id: crypto.randomUUID(),
+            content: promptText,
+            role: "user"
+        }
 
     return (
         <main>
@@ -40,12 +47,12 @@ const Home = () => {
                     with the most up-to-date answers, we hope you enjoy
                 </p>
                 <br/>
-                <PromptSuggestionRow/>
+                <PromptSuggestionRow onPromptClick={handlePrompt}/>
 
                 </>
             ) : (
                 <>
-                   {messages.map((message: UIMessage, index: number) => <Bubble key={index} message={message}/> )}
+                   {messages.map((message: UIMessage, index: number) => <Bubble key={`message-${index}`} message={message}/> )}
                 {status && <LoadingBubble />}
                 </>
                  )}
@@ -60,5 +67,6 @@ const Home = () => {
             
     )
 }
+}
 
-export default Home
+export default Home;

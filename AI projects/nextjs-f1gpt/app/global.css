@@ -73,6 +73,24 @@ input:focus {
   outline: none;
 }
 
+.bubble.user {
+  background-color: #E1F4FFFF;
+  align-self: flex-end;
+  border-radius: 15px 15px 0 15px;
+  padding: 10px;
+  margin-left: auto;
+  max-width: 60%;
+}
+
+.bubble.assistant {
+  background-color: #dce7ff;
+  align-self: flex-start;
+  border-radius: 15px 15px 15px 0;
+  padding: 10px;
+  margin-right: auto;
+  max-width: 60%;
+}
+
 .loader {
   margin: 10px;
   width: 60px;
