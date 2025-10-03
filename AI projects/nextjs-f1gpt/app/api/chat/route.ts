@@ -1,7 +1,6 @@
 import Groq from "groq-sdk";
-import { OpenAIStream, StreamingTextResponse } from "@ai-sdk/react";
-import { OpenAI } from "openai";
-import { MistralAI, MistralAIEmbeddings } from "@langchain/mistralai";
+import { streamText, type ModelMessage, StreamingTextResponse } from "ai";
+import { MistralAIEmbeddings } from "@langchain/mistralai";
 import { DataAPIClient } from "@datastax/astra-db-ts";
 
 const {
@@ -13,38 +12,47 @@ const {
     MISTRAL_API_KEY
 } = process.env;
 
+// Initialize clients
 const groq = new Groq({ apiKey: GROQ_API_KEY });
-
-// Initialize Astra DB connection
-const client = new DataAPIClient(ASTRA_DB_APPLICATION_TOKEN!);
-const db = client.db(ASTRA_DB_API_ENDPOINT, { keyspace: ASTRA_DB_NAMESPACE });
+const dbClient = new DataAPIClient(ASTRA_DB_APPLICATION_TOKEN!);
+const db = dbClient.db(ASTRA_DB_API_ENDPOINT, { keyspace: ASTRA_DB_NAMESPACE });
 
 export async function POST(req: Request) {
+        // 1. Get messages from the request
     try {
         const { messages } = await req.json();
-        const latestMessage = messages[messages?.length - 1]?.text;
+        const latestMessage = messages[messages?.length - 1]?.content;
 
         let docContext = "";
 
-        //Initialize Mistral model for embeddings
-        const embeddings = await new MistralAIEmbeddings({
+        // --- 2. Embedding and Retrieval (RAG) ---
+        try {
+            // Initialize Mistral model for embeddings
+             const embeddings = new MistralAIEmbeddings({
             model: "mistral-embed"
         });
+            // Generate the embedding vector for the latest message
+            const embedding = await embeddings.embedQuery(latestMessage);
 
-        const embedding = await embeddings.embedQuery(latestMessage)
+            const collection = db.collection(ASTRA_DB_COLLECTION)
 
-        try {
-            const collection = await db.collection(ASTRA_DB_COLLECTION)
-            const cursor = collection.find(null, {
-                sort: {
-                    $vector: embedding.data[0].embedding,
-                },
-                limit: 10,
-            })
-
-            const documents = await cursor.toArray();
+            const documents = await collection.find({},
+                {
+                    sort: {
+                        $vector: embedding,
+                    },
+                    limit: 5,
+                    projection: {
+                        content: 1,
+                    },
+                }
+            ).toArray();
+        
+            // Format the retrieved context
             const docsMap = documents?.map(doc => doc.text).join("\n\n");
+
             docContext = JSON.stringify(docsMap);
+
             console.log("Context:", docContext)
 
             } catch (error) {
@@ -52,7 +60,9 @@ export async function POST(req: Request) {
                 docContext = "";
             }
 
-            const template = {
+            
+            // --- 3. Construct Final Prompt & Generate Response ---
+            const systemPrompt = {
                 role: "system", 
                 content: `You are F1GPT, a friendly and helpful AI who is an expert in Formula One.
                 Use the below context to augment what you know about formula One racing.
@@ -64,13 +74,13 @@ export async function POST(req: Request) {
                 Question: ${latestMessage}`
             }
 
-           const response = await groq.chat.completions.create({
+            const response = await streamText({
                 model: "llama-3.3-70b-versatile",
-                messages: [...messages, template],
+                messages: [...messages, systemPrompt],
+                temperature: 0.7
             });
-
-            console.log(response.choices[0]?.message?.content);
-            return new StreamingTextResponse(OpenAIStream(response));
+            
+        return new StreamingTextResponse(response.toStream());
     } catch (error) {
         throw error;
     }
