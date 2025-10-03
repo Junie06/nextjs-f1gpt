@@ -5,6 +5,9 @@ import { useChat } from "@ai-sdk/react"
 import { type UIMessage } from "ai"
 import Image from "next/image"
 import f1GPTLogo from "./assets/f1gpt logo.png"
+import Bubble from "./components/Bubble"
+import LoadingBubble from "./components/LoadingBubble"
+import PromptSuggestionRow from "./components/PromptSuggestionRow"
 
 
 const Home = () => {
@@ -23,7 +26,14 @@ const Home = () => {
         }
     }
 
-    const noMessages = true
+    const noMessages = !messages || messages.length === 0;
+
+    const handlePrompt = async (promptText) => {
+        const msg = {
+            id: crypto.randomUUID(),
+            content: promptText,
+            role: "user"
+        }
 
     return (
         <main>
@@ -37,13 +47,13 @@ const Home = () => {
                     with the most up-to-date answers, we hope you enjoy
                 </p>
                 <br/>
-                {/*<PromptSuggestionsRow/>*/}
+                <PromptSuggestionRow onPromptClick={handlePrompt}/>
 
                 </>
             ) : (
                 <>
-                   {/*map messages onto text bubbles*/}
-                   {/*<LoadingBubble />*/}
+                   {messages.map((message: UIMessage, index: number) => <Bubble key={`message-${index}`} message={message}/> )}
+                {status && <LoadingBubble />}
                 </>
                  )}
             </section>
@@ -57,5 +67,6 @@ const Home = () => {
             
     )
 }
+}
 
-export default Home
+export default Home;
