@@ -28,12 +28,9 @@ const Home = () => {
 
     const noMessages = !messages || messages.length === 0;
 
-    const handlePrompt = async (promptText) => {
-        const msg = {
-            id: crypto.randomUUID(),
-            content: promptText,
-            role: "user"
-        }
+    const handlePrompt = async (promptText: string) => {
+        await sendMessage({ text: promptText});
+    };
 
     return (
         <main>
@@ -52,8 +49,11 @@ const Home = () => {
                 </>
             ) : (
                 <>
-                   {messages.map((message: UIMessage, index: number) => <Bubble key={`message-${index}`} message={message}/> )}
-                {status && <LoadingBubble />}
+                   {messages.map((message: UIMessage) => (
+                    <Bubble key={message.id} message={message}/> 
+                ))};
+
+                {status === "streaming" && <LoadingBubble />}
                 </>
                  )}
             </section>
@@ -66,7 +66,6 @@ const Home = () => {
         </main>
             
     )
-}
 }
 
 export default Home;
